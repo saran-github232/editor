@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/background">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="72dp" android:gravity="center_vertical" android:paddingHorizontal="24dp">
+        <ImageView android:layout_width="36dp" android:layout_height="36dp" android:src="@drawable/ic_clipper" android:importantForAccessibility="no" />
+        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="12dp" android:text="@string/ui_clipper" android:textSize="25sp" android:fontFamily="sans-serif-medium" android:textColor="@color/text" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_on_device_studio" android:textSize="10sp" android:letterSpacing="0.09" android:textColor="@color/accent" />
+    </LinearLayout>
+    <ScrollView android:id="@+id/pageScroll" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true" android:clipToPadding="false">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingHorizontal="20dp" android:paddingBottom="32dp">
+            <LinearLayout android:id="@+id/studioPage" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_hero" android:padding="24dp" android:layout_marginTop="8dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_make_every_part_count" android:textColor="@color/accent" android:textSize="11sp" android:letterSpacing="0.12" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="@string/ui_one_video_nevery_moment" android:textColor="@color/text" android:textSize="36sp" android:fontFamily="sans-serif-medium" android:lineSpacingExtra="-3dp" />
+                    <TextView style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_split_long_videos_into_ordered_clips_add_your_words_kee" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/chooseVideo" android:layout_width="match_parent" android:layout_height="58dp" android:layout_marginTop="20dp" android:text="@string/ui_choose_a_video" app:cornerRadius="16dp" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:gravity="center" android:text="@string/ui_1_200_minutes_processed_on_your_device" android:textSize="11sp" android:textColor="@color/muted" />
+                </LinearLayout>
+                <LinearLayout android:id="@+id/selectionCard" style="@style/Card" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:orientation="vertical" android:visibility="gone">
+                    <TextView android:id="@+id/sourceName" style="@style/SectionTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLines="2" android:ellipsize="middle" />
+                    <TextView android:id="@+id/sourceInfo" style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" />
+                    <FrameLayout android:layout_width="match_parent" android:layout_height="210dp" android:layout_marginTop="16dp">
+                        <androidx.media3.ui.PlayerView android:id="@+id/sourcePlayer" android:layout_width="match_parent" android:layout_height="match_parent" app:show_buffering="when_playing" />
+                        <TextView android:id="@+id/captionPreview" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="top|center_horizontal" android:layout_margin="20dp" android:padding="5dp" android:background="#B3000000" android:textColor="#FFFFFF" android:textSize="15sp" android:gravity="center" android:importantForAccessibility="no" />
+                    </FrameLayout>
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_caption_position_preview_export_styling_may_differ" android:textSize="11sp" android:textColor="@color/muted" android:layout_marginTop="6dp" />
+                </LinearLayout>
+                <LinearLayout style="@style/Card" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="16dp">
+                    <TextView style="@style/SectionTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_01_make_the_cut" />
+                    <TextView style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_length_of_each_clip" />
+                    <com.google.android.material.chip.ChipGroup android:id="@+id/lengthGroup" android:layout_width="match_parent" android:layout_height="wrap_content" app:singleSelection="true" app:selectionRequired="true" app:checkedChip="@id/length60">
+                        <com.google.android.material.chip.Chip android:id="@+id/length60" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_1_min" />
+                        <com.google.android.material.chip.Chip android:id="@+id/length90" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_1_5_min" />
+                        <com.google.android.material.chip.Chip android:id="@+id/length120" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_2_min" />
+                        <com.google.android.material.chip.Chip android:id="@+id/length150" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_2_5_min" />
+                        <com.google.android.material.chip.Chip android:id="@+id/length180" style="@style/Widget.Material3.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/ui_3_min" />
+                    </com.google.android.material.chip.ChipGroup>
+                    <TextView style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_export_mode" />
+                    <Spinner android:id="@+id/cutMode" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/ui_export_mode" />
+                    <TextView style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/ui_resolution_short_edge" />
+                    <Spinner android:id="@+id/resolution" android:layout_width="match_parent" android:layout_height="52dp" android:contentDescription="@string/ui_export_resolution" />
+                    <TextView android:id="@+id/qualityNote" style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" />
+                </LinearLayout>
+                <LinearLayout style="@style/Card" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="16dp">
+                    <TextView style="@style/SectionTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_02_add_your_words" />
+                    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:hint="@string/ui_caption_for_every_clip" app:counterEnabled="true" app:counterMaxLength="160">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/captionText" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLength="160" android:inputType="textCapSentences|textMultiLine" android:maxLines="3" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <RadioGroup android:id="@+id/captionPosition" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:checkedButton="@id/positionTop">
+                        <RadioButton android:id="@+id/positionTop" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:text="@string/ui_at_the_top" />
+                        <RadioButton android:id="@+id/positionBottom" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:text="@string/ui_at_the_bottom" />
+                    </RadioGroup>
+                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/partLabels" android:layout_width="match_parent" android:layout_height="56dp" android:text="@string/ui_number_every_part" android:checked="true" />
+                    <com.google.android.material.textfield.TextInputLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/ui_part_label_part_becomes_1_2_3">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/partTemplate" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_part_part" android:maxLength="80" android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.button.MaterialButton android:id="@+id/captionCommand" style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content" android:layout_height="48dp" android:text="@string/ui_tell_clipper_where_to_put_text" />
+                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/autoSubtitles" android:layout_width="match_parent" android:layout_height="56dp" android:text="@string/ui_generate_speech_subtitles" />
+                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/burnSubtitles" android:layout_width="match_parent" android:layout_height="56dp" android:text="@string/ui_burn_subtitles_into_the_video" android:checked="true" />
+                    <TextView style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_speech_recognition_runs_offline_after_a_language_downlo" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/reviewSubtitles" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="12dp" android:text="@string/ui_generate_and_review_subtitles" />
+                </LinearLayout>
+                <LinearLayout style="@style/Card" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="16dp">
+                    <TextView style="@style/SectionTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_03_choose_a_home" />
+                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/driveExport" android:layout_width="match_parent" android:layout_height="56dp" android:text="@string/ui_also_upload_to_google_drive" />
+                    <TextView style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_your_clips_stay_in_the_library_save_them_individually_o" />
+                    <TextView android:id="@+id/exportSummary" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="18dp" android:text="@string/ui_choose_a_video_to_see_your_clip_plan" android:textSize="16sp" android:textColor="@color/accent" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/startExport" android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="16dp" android:text="@string/ui_create_clips" app:cornerRadius="16dp" />
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout android:id="@+id/libraryPage" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_your_library" android:textSize="32sp" android:textColor="@color/text" android:fontFamily="sans-serif-medium" android:layout_marginTop="16dp" />
+                <TextView style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_every_project_every_part_right_where_you_left_it" android:layout_marginTop="8dp" android:layout_marginBottom="20dp" />
+                <TextView android:id="@+id/libraryStats" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/accent" android:textSize="14sp" android:layout_marginBottom="16dp" />
+                <LinearLayout android:id="@+id/projectList" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
+            </LinearLayout>
+            <LinearLayout android:id="@+id/settingsPage" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_make_it_yours" android:textSize="32sp" android:textColor="@color/text" android:fontFamily="sans-serif-medium" android:layout_marginTop="16dp" android:layout_marginBottom="20dp" />
+                <LinearLayout style="@style/Card" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                    <TextView style="@style/SectionTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_google_drive" />
+                    <TextView android:id="@+id/driveStatus" style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/connectDrive" android:layout_width="match_parent" android:layout_height="54dp" android:text="@string/ui_connect_google_drive" android:layout_marginTop="12dp" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/disconnectDrive" style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/ui_disconnect_and_revoke_access" />
+                    <com.google.android.material.materialswitch.MaterialSwitch android:id="@+id/wifiOnly" android:layout_width="match_parent" android:layout_height="56dp" android:text="@string/ui_upload_only_on_unmetered_networks" android:checked="true" />
+                </LinearLayout>
+                <LinearLayout style="@style/Card" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="16dp">
+                    <TextView style="@style/SectionTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_offline_speech_subtitles" />
+                    <Spinner android:id="@+id/speechLanguage" android:layout_width="match_parent" android:layout_height="56dp" android:contentDescription="@string/ui_speech_recognition_language" />
+                    <TextView android:id="@+id/modelStatus" style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/installModel" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="match_parent" android:layout_height="56dp" android:text="@string/ui_download_language_model" android:layout_marginTop="12dp" />
+                </LinearLayout>
+                <LinearLayout style="@style/Card" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="16dp">
+                    <TextView style="@style/SectionTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/ui_storage_and_privacy" />
+                    <TextView android:id="@+id/storageStatus" style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" />
+                    <TextView style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/ui_no_ads_no_analytics_no_video_server_clipper_reads_only_" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/privacyInfo" style="@style/Widget.Material3.Button.TextButton" android:layout_width="match_parent" android:layout_height="48dp" android:text="@string/ui_privacy_and_quality_details" />
+                </LinearLayout>
+                <TextView style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:gravity="center" android:text="@string/ui_clipper_0_1_0_made_for_your_moments_nuse_videos_you_own" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+    <TextView android:id="@+id/activeBanner" android:layout_width="match_parent" android:layout_height="wrap_content" android:minHeight="48dp" android:padding="14dp" android:background="@color/surface_high" android:textColor="@color/accent" android:textSize="13sp" android:visibility="gone" android:gravity="center_vertical" />
+    <com.google.android.material.bottomnavigation.BottomNavigationView android:id="@+id/navigation" android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@color/background" app:menu="@menu/navigation" app:labelVisibilityMode="labeled" />
+</LinearLayout>

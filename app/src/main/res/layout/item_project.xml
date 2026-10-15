@@ -1,0 +1,14 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" style="@style/Card" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" android:orientation="vertical">
+    <TextView android:id="@+id/projectTitle" style="@style/SectionTitle" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLines="2" android:ellipsize="middle" />
+    <TextView android:id="@+id/projectMeta" style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" />
+    <com.google.android.material.progressindicator.LinearProgressIndicator android:id="@+id/projectProgress" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" />
+    <TextView android:id="@+id/projectStatus" style="@style/BodyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:accessibilityLiveRegion="polite" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+        <com.google.android.material.button.MaterialButton android:id="@+id/projectAction" android:layout_width="0dp" android:layout_height="54dp" android:layout_weight="1" android:text="@string/ui_resume" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/viewClips" style="@style/Widget.Material3.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="54dp" android:layout_weight="1" android:layout_marginStart="8dp" android:text="@string/ui_view_clips" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+        <com.google.android.material.button.MaterialButton android:id="@+id/editSubtitles" style="@style/Widget.Material3.Button.TextButton" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:text="@string/ui_edit_subtitles" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/deleteProject" style="@style/Widget.Material3.Button.TextButton" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:text="@string/ui_delete_local" />
+    </LinearLayout>
+</LinearLayout>

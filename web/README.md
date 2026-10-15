@@ -1,0 +1,137 @@
+# Clipper Studio web app
+
+This guide covers the web app only. The Kotlin/Android app is unchanged.
+
+## Run locally
+
+Use Node.js 22.12 or newer. In PowerShell:
+
+```powershell
+cd C:\AndroidPro\clipper\web
+npm install
+npm run dev
+```
+
+Open **http://127.0.0.1:4317/**. Keep the terminal running. For a production build:
+
+```powershell
+npm run build
+npm start
+```
+
+Run these commands from `web`, not the Android project root. If PowerShell blocks `npm.ps1`, use `npm.cmd run dev`. If the port is occupied, use the already-running Clipper instance or stop that instance before starting another. To choose a different port:
+
+```powershell
+$env:PORT='4320'
+npm run dev
+```
+
+Use the exact `127.0.0.1` address printed in the terminal. The development WebSocket shares the app server, avoiding the old fixed-port conflict. Reload the page after restarting the server to renew the local session cookie.
+
+If FFmpeg is missing after installation, npm may have blocked its install script. From `web`, run `node node_modules/ffmpeg-static/install.js`, then restart. `CLIPPER_FFMPEG` and `CLIPPER_FFPROBE` can point to existing binaries. An `ENOTFOUND registry.npmjs.org` install error indicates a network/DNS failure; retry after restoring registry access.
+
+## Trim, merge, review and download
+
+1. Open **Batch clips**, then **Import footage**. Source videos may be up to **3 hours**. The byte limit is 100 GB or available source-storage capacity minus a 512 MB reserve, whichever is smaller.
+2. Play the source video. For a container or codec the browser cannot decode, choose **Create compatible playback preview**. This may take time for long footage. It creates an H.264/AAC preview; exports still read the original source.
+3. Choose **Trim ranges**, **Merge clips**, or **Auto split**.
+4. Enter start/end values as `HH:MM:SS` or `HH:MM:SS.mmm`. For example, `00:01:20` to `00:20:35`, or `01:02:30` to `02:01:20`. These ranges keep the selected footage. Use the play button beside a range to check it. **Mark start/end** uses the current player position for the last focused range.
+5. Add, remove or reorder ranges. Separate trims may be longer than three minutes. In **Merge clips**, each individual range is limited to three minutes. Two three-minute ranges produce one video of approximately six minutes, in the displayed order. Merging currently combines ranges from the same source.
+6. Add or generate timed captions, review their words and timestamps, then render.
+7. Choose **Review** on a finished result. Watch it, then explicitly choose **Download video**, **Video + captions (.zip)**, or **Save to Google Drive**. No browser download or Drive upload begins automatically.
+8. **Edit settings & render again** restores the ranges and captions for another render. **Discard** removes the render. It does not delete the source or previously downloaded files.
+
+In Review, use **Finished part** to switch between rendered clips, **Preview last 10 seconds** to check an ending, or **Edit this clip** to restore just that clip's source range. If an older preview file is missing, **Rebuild playable preview** creates a new precise-cut render from the original and opens it when ready. This requires the imported original to still be available and does not download anything automatically.
+
+MP4 downloads include burned-in captions when captions were supplied. The ZIP includes both the MP4 and editable SRT. Caption times are trimmed and rebased to each output, including the merged sequence. Auto split still supports 60, 90, 120, 150 and 180-second parts.
+
+## Quality
+
+| Mode | Behavior |
+| --- | --- |
+| Original copy | Copies compressed video/audio packets. No re-encoding, text overlays or resizing. Cuts follow keyframes and may not match requested times exactly. Not offered for merge. |
+| Precise cuts | H.264 CRF 16 with AAC audio up to 320 kbps. Supports precise trim ranges, bottom captions, scaling and merge. Uses original dimensions by default and never upscales. Re-encoding is not mathematically lossless. |
+
+The compatibility player is a separate preview, potentially at a lower resolution. It never replaces the source used for native exports. Original-size odd dimensions may round down by one pixel for H.264 compatibility. HDR sources detected by transfer metadata are rejected in precise mode to avoid silently treating them as SDR; use original copy. Full HDR/color-management support is not implemented.
+
+The full timeline editor is a separate browser renderer for effects, text and multitrack editing. Its export settings are separate from native trim/merge. **Save to my media library** is off by default. Three-hour effects-heavy browser rendering and production 4K/HDR workflows are not certified by the small regression fixtures.
+
+Timeline edits autosave. Use **Save project** before reloading or leaving, and wait for **All changes saved**. The editor warns if you try to close the page with unsaved changes.
+
+## Captions: NVIDIA Parakeet and Gemini
+
+Install the speech client once:
+
+```powershell
+npm run setup:speech
+```
+
+This installs the Python Riva client in `web/.venv` and retains the offline speech dependencies. Python 3 must be installed. You can use `CLIPPER_PYTHON` to select another Python executable.
+
+Enter API keys in **Cloud captions > API keys for this server session**, or copy `.env.example` to `.env` and fill it privately:
+
+```dotenv
+GEMINI_API_KEY=your_key
+GEMINI_MODEL=gemini-2.5-flash
+NVIDIA_API_KEY=your_key
+NVIDIA_FUNCTION_ID=71203149-d3b7-4460-8231-1be2543a1fca
+```
+
+Restart after changing `.env`. Do not use a `VITE_` prefix for secrets. Session-entered keys stay in server memory until restart; they are not returned by the settings endpoint or stored in browser storage.
+
+The NVIDIA integration targets **parakeet-1.1b-rnnt-multilingual-asr**, using the hosted Riva gRPC endpoint and real word timestamps. Gemini requests structured timed cues. Audio is extracted in 30-second chunks, so a three-hour source does not have to be loaded into RAM or sent in one request. Chunk boundaries and recognition errors can affect timing and words; review the SRT before export.
+
+Choose the preferred provider, then **Generate captions**. Completed captions populate the editable SRT field automatically. If a provider returns quota/rate-limit or transient server errors, the other configured provider is tried. Invalid credentials and configuration errors are shown instead of silently switching. If both providers fail, the task stops with an error. Provider accounts, language support and quotas remain external requirements. Cloud recognition sends audio to those providers only when you request it.
+
+Offline English/Hindi recognition remains available under **Offline speech recognition**. Download its language model once before using it. SRT import and manual editing work without any API keys.
+
+## Google Drive
+
+A shared folder link alone cannot authorize uploads. Create a Google Cloud OAuth **Web application**, enable the Drive API, configure its consent screen/test users, and register this exact redirect URI:
+
+```text
+http://127.0.0.1:4317/oauth/drive/callback
+```
+
+Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `web/.env`, then restart. Use the matching port in the redirect URI if you change `PORT`.
+
+In a rendered preview, expand **Save to Google Drive**, connect your Google account, complete consent, return to Clipper and press **Refresh connection**. Paste a **folder** link, then choose **Upload video + captions**. The connected account must be allowed to add files to that folder. The app requests the Drive OAuth scope because arbitrary existing folder links need access beyond app-created files. This is an explicit Google consent step; the app does not change folder sharing permissions.
+
+Video and SRT are uploaded separately using streaming/resumable-upload sessions. Tokens are held in server memory; reconnect after a restart. If an upload fails partway through, check Drive before retrying because a previous file may already exist. Automatic upload-resume across process restarts is not implemented.
+
+References: [NVIDIA hosted Parakeet API](https://build.nvidia.com/nvidia/parakeet-1_1b-rnnt-multilingual-asr/api), [Gemini audio documentation](https://ai.google.dev/gemini-api/docs/audio), [Drive upload documentation](https://developers.google.com/workspace/drive/api/guides/manage-uploads).
+
+## Storage
+
+- Imported source files and saved project metadata live in `web/.clipper-data` by default. Set `CLIPPER_DATA_DIR` before startup to use another drive.
+- New native rendered clips live in the operating system's temporary `clipper-previews` folder, outside the project folder. `CLIPPER_PREVIEW_DIR` can change that location. Large files require temporary disk space even before a manual download.
+- Completed/paused/failed render previews are removed after 24 hours by a periodic cleanup while the server is running. Old renders from earlier app versions remain in their original export folder until you discard them.
+- Compatible playback copies also use temporary storage. Imported originals are retained for later edits. Downloaded files are controlled by your browser's download settings.
+- The local server binds to loopback and checks the Host, Origin and session cookie. It is intended for local use, not public hosting.
+
+## Tests and current validation
+
+```powershell
+npm test
+npm run test:e2e
+npm run build
+```
+
+The browser tests use installed Microsoft Edge, isolated test data on port 4322, and synthetic footage. Artifacts go under `web/test-results`. The API suite uses port 4318.
+
+See [VALIDATION.md](VALIDATION.md) for actual results and outstanding live-provider checks. Synthetic tests establish local workflow behavior, not recognition accuracy on every language, performance on every three-hour movie, or production parity with Premiere Pro.
+
+### Latest checked results
+
+The production build and all three browser workflows passed: trim/merge/download, timeline save/reload/export, and missing-preview recovery with return to editing. The API/media suite previously passed 17 tests. The supplied footage was also merged and downloaded successfully at 1280 × 720. Live NVIDIA/Gemini recognition and Drive uploads still require account configuration and have not been verified with live credentials. See `VALIDATION.md` for details.
+
+### Clone from GitHub
+
+```powershell
+git clone https://github.com/saran-github232/editor.git
+cd editor/web
+npm install
+npm run dev
+```
+
+Secrets, imported footage, temporary renders, installed dependencies, local Python environments and test outputs are excluded from source control. Configure your own `web/.env` using `.env.example` after cloning. The retained Android source is included, but these changes and checks target the web app only.

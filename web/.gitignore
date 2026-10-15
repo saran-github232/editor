@@ -1,0 +1,7 @@
+.env
+.env.local
+.venv/
+.clipper-data/
+node_modules/
+dist/
+test-results/

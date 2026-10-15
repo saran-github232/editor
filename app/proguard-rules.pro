@@ -1,0 +1,4 @@
+-keep class app.clipper.model.** { *; }
+-keep class org.vosk.** { *; }
+-keep class com.sun.jna.** { *; }
+-dontwarn java.awt.**
