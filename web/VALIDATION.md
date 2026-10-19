@@ -1,5 +1,13 @@
 # Validation log
 
+## 19 October 2026: fonts, colors and emoji picker
+
+- Production build passed (28.76 seconds). Emoji data is a separate lazy-loaded chunk. The existing main-bundle size warning remains.
+- All seven Edge browser workflows passed (1.2 minutes).
+- The finished-clip test changes the font to Georgia, checks that preview pixels change, chooses a yellow swatch, searches for and inserts a party-popper emoji, then closes and reopens the draft. Font, color, and emoji text are retained.
+- The test switches square and portrait ratios and checks the preview frame immediately. The downloaded file is 1080 x 1920 with audio. Pixel comparison against the cropped source confirms the title is baked into the export.
+- The picker uses a lazy-loaded offline catalog of 3,781 fully-qualified Unicode Emoji 16.0 entries. System fonts determine glyph availability and appearance.
+
 ## 19 October 2026: frame ratios and platform guide
 
 - Final production build passed (33.28 seconds). The existing large JavaScript bundle warning remains.
