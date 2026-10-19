@@ -138,6 +138,18 @@ Video and SRT are uploaded separately using streaming/resumable-upload sessions.
 
 References: [NVIDIA hosted Parakeet API](https://build.nvidia.com/nvidia/parakeet-1_1b-rnnt-multilingual-asr/api), [Gemini audio documentation](https://ai.google.dev/gemini-api/docs/audio), [Drive upload documentation](https://developers.google.com/workspace/drive/api/guides/manage-uploads).
 
+## Timeline Pro tools
+
+Open **Pro tools** beside Save project in the timeline editor. Select a clip using the panel dropdown or the timeline.
+
+- **Motion presets:** video fade in/out, slow zoom, slide-up entrance, and audio fade in/out. These create editable keyframes, so you can refine them in the graph editor. Choose the fade/entrance duration first. Clips must be at least three frames long.
+- **Framing:** fit the complete media clip or fill the canvas with a centered crop. These reset the selected clip's position, rotation, scale and associated keyframes. The ratio menu controls the project dimensions.
+- **Speed and sound:** 0.25x to 4x playback with pitch preservation, gain presets, and mute. Speed changes duration without moving adjacent clips, so check gaps and overlaps. Set speed and gain before adding fades.
+- **Titles:** add a title card or lower third at the playhead, with a background plate and fade. Each is a separate editable text layer. Change fonts, color, positioning and text in Properties. A title near the sequence end can extend it.
+- **Review:** preview from the selected clip, undo/redo edits, save, reopen, and export using the normal timeline renderer. Presets replace only their affected animation channels; Undo restores the previous edit.
+
+These tools complement the existing timeline, keyframes, masks and blend modes. This is a focused local editor, not full Premiere Pro or After Effects feature parity. Heavy effects, long 4K sequences and all codec combinations still need separate validation.
+
 ## Storage
 
 - Imported source files and saved project metadata live in `web/.clipper-data` by default. Set `CLIPPER_DATA_DIR` before startup to use another drive.
@@ -160,7 +172,7 @@ See [VALIDATION.md](VALIDATION.md) for actual results and outstanding live-provi
 
 ### Latest checked results
 
-On 19 October 2026, all 20 unit/API/media checks and all seven Edge browser workflows passed. Tests render every frame preset in Fit and Fill modes, check output dimensions and audio, verify timed text pixels, and confirm portrait downloads from both editors. The timeline ratio survives reload and first-clip import. Live NVIDIA/Gemini recognition and Drive uploads still require account configuration and have not been verified with live credentials. See `VALIDATION.md` for build results and details.
+On 19 October 2026, all 22 unit/API/media checks and all eight Edge browser workflows passed (seven regressions plus the new Pro tools export test). Tests render every frame preset in Fit and Fill modes, check output dimensions and audio, verify timed text pixels, and confirm portrait downloads from both editors. The timeline ratio survives reload and first-clip import. The Pro tools workflow also verifies save/reopen, undo/redo, retiming, editable motion channels, titles and rendered video/audio fades. Live NVIDIA/Gemini recognition and Drive uploads still require account configuration and have not been verified with live credentials. See `VALIDATION.md` for build results and details.
 
 ### Clone from GitHub
 

@@ -1,3 +1,4 @@
+import {saveJson} from './atomic-save.mjs';
 import {frameSettings} from '../shared/frame-presets.mjs';
 import express from 'express';
 import {validateLayers,prepareEdit,renderEdit} from './clip-edit.mjs';
@@ -29,7 +30,7 @@ const uuid=/^[a-f0-9-]{36}$/;
 function id(value){if(!uuid.test(value||''))throw Object.assign(new Error('Invalid identifier'),{status:400});return value;}
 const file=(kind,value)=>path.join(data,kind,`${id(value)}.json`);
 async function read(kind,value){try{return JSON.parse(await readFile(file(kind,value),'utf8'));}catch(e){if(e.code==='ENOENT')throw Object.assign(new Error('Not found'),{status:404});throw e;}}
-async function save(kind,value){const target=file(kind,value.id),temp=target+'.'+randomUUID()+'.tmp';await writeFile(temp,JSON.stringify(value));await rename(temp,target);}
+async function save(kind,value){await saveJson(file(kind,value.id),value);}
 async function list(kind){const names=(await readdir(path.join(data,kind))).filter(n=>n.endsWith('.json'));return Promise.all(names.map(n=>read(kind,n.slice(0,-5))));}
 app.disable('x-powered-by');
 app.use((req,res,next)=>{

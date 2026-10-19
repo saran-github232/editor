@@ -1,5 +1,17 @@
 # Validation log
 
+## 19 October 2026: timeline Pro tools
+
+- Added a focused panel using the existing command history, keyframes and render pipeline: motion/audio fades, zoom, slide-up, framing, playback speed, gain/mute and editable title templates.
+- Browser coverage checks 2x speed and resulting duration, undo/redo, fit/fill controls, gain/mute, all four motion presets, lower-third insertion, saved animation channels and reload.
+- The downloaded synthetic export is 320 x 180, approximately four seconds, with audio. Pixel luminance confirms the video fades in. Audio RMS during the fade is more than 10 dB below the steady section. The exported lower third was also inspected visually.
+- Seven existing browser regressions passed in the full run. The new test initially exposed assertion issues (stored channel naming, FFmpeg duration syntax and parsing digital silence); the corrected test samples an audible part of the fade.
+- Final production build passed (31.36 seconds). The existing large-bundle warning remains.
+- Unit/API/media suite: 22 passed (34.65 seconds) after the save-retry fix.
+- Corrected Pro tools browser test passed (22.8 seconds). All eight workflows passed across the regression run and targeted rerun.
+- The API regression exposed a transient Windows EPERM during atomic JSON replacement. Saves now retry temporary file locks for at most 1.26 seconds and retain the old complete JSON on failure. Deterministic tests cover recovery, bounded failure and temporary-file cleanup.
+- Scope remains web-only. These checks do not certify full Adobe editor parity, long 4K timelines, all codecs or every possible combination of effects.
+
 ## 19 October 2026: fonts, colors and emoji picker
 
 - Production build passed (28.76 seconds). Emoji data is a separate lazy-loaded chunk. The existing main-bundle size warning remains.

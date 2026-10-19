@@ -164,3 +164,38 @@ await expect(dialog.getByRole('link',{name:'Download video',exact:true})).toBeVi
   const difference=await run(ffmpeg,['-v','error','-i',target,'-i',sourceFile,'-filter_complex','[1:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1[base];[0:v][base]blend=all_mode=difference,crop=700:250:190:160,signalstats,metadata=print:file=-','-frames:v','1','-f','null','-']);
   expect(Number(String(difference).match(/lavfi.signalstats.YAVG=([\d.]+)/)?.[1])).toBeGreaterThan(5);
 });
+
+test('pro tools preserve motion, speed and titles through save and rendered export',async({page})=>{
+  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('/');await page.getByLabel('Project name').fill('Pro workflow');await page.getByRole('button',{name:'Create',exact:true}).click();
+  await page.getByRole('dialog',{name:'Welcome to the editor'}).getByRole('button',{name:'Close',exact:true}).click();
+  const chooser=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Import',exact:true}).click();await(await chooser).setFiles(fixture);
+  const asset=page.getByRole('listbox',{name:'Assets'}).getByRole('option').filter({hasText:'e2e-fixture.mp4'});await asset.getByRole('button').click();
+  await page.getByRole('button',{name:'Pro tools',exact:true}).click();
+  const panel=page.getByRole('complementary',{name:'Pro tools panel'});
+  await panel.getByLabel('Pro selected clip').selectOption({label:'e2e-fixture.mp4 · video'});
+  await panel.getByLabel('Pro playback speed').selectOption('2');await expect(panel).toContainText('4.00 seconds');
+  await panel.getByRole('button',{name:'Undo edit',exact:true}).click();await expect(panel.getByLabel('Pro playback speed')).toHaveValue('1');
+  await panel.getByRole('button',{name:'Redo edit',exact:true}).click();await expect(panel.getByLabel('Pro playback speed')).toHaveValue('2');
+  await panel.getByRole('button',{name:'Fill and center crop',exact:true}).click();
+  await panel.getByRole('button',{name:'Fit whole clip',exact:true}).click();
+  await panel.getByLabel('Pro audio level').selectOption('-6');
+  await panel.getByLabel('Mute clip audio').check();await panel.getByLabel('Mute clip audio').uncheck();
+  for(const name of ['Video fade in / out','Audio fade in / out','Slow zoom in','Slide up entrance'])await panel.getByRole('button',{name,exact:true}).click();
+  await panel.getByLabel('Pro title text').fill('Part 1');await panel.getByRole('button',{name:'Add lower third',exact:true}).click();
+  await expect(panel.getByRole('alert')).toHaveCount(0);
+  await page.getByRole('button',{name:'Save project',exact:true}).click();await expect(page.locator('.editor-brand [role="status"]')).toHaveText('All changes saved');
+  const id=page.url().split('/').pop();const saved=await(await page.request.get('/api/projects/'+id)).json();
+  const serialized=JSON.stringify(saved);expect(serialized).toContain('Part 1');expect(serialized).toContain('transform.scaleX');const videoClip=saved.data.project.scenes[0].tracks.main.elements[0];for(const channel of ['opacity','volume','transform.scaleX','transform.scaleY','transform.positionY'])expect(videoClip.animations[channel].keys.length).toBeGreaterThanOrEqual(2);
+  await page.reload();await page.getByRole('button',{name:'Pro tools',exact:true}).click();
+  await panel.getByLabel('Pro selected clip').selectOption({label:'e2e-fixture.mp4 · video'});await expect(panel.getByLabel('Pro playback speed')).toHaveValue('2');await expect(panel.getByLabel('Pro audio level')).toHaveValue('-6');
+  await page.screenshot({path:path.resolve('test-results/pro-tools.png')});
+  await panel.getByRole('button',{name:'Close tools',exact:true}).click();
+  await page.getByRole('button',{name:'Export',exact:true}).click();const download=page.waitForEvent('download');await page.getByRole('button',{name:'Export',exact:true}).last().click();
+  const output=path.resolve('test-results/pro-timeline.mp4');await(await download).saveAs(output);const meta=await probe(output);expect(meta.width).toBe(320);expect(meta.height).toBe(180);expect(Math.abs(meta.duration-4)).toBeLessThan(.3);expect(meta.hasAudio).toBeTruthy();
+  async function brightness(time:number){const raw=await run(ffmpeg,['-v','error','-ss',String(time),'-i',output,'-vf','signalstats,metadata=print:file=-','-frames:v','1','-f','null','-']);return Number(String(raw).match(/lavfi.signalstats.YAVG=([\d.]+)/)?.[1]);}
+  expect(await brightness(.8)).toBeGreaterThan((await brightness(0))+20);
+  async function rms(time:number){const raw=await run(ffmpeg,['-v','error','-ss',String(time),'-t','0.05','-i',output,'-vn','-af','astats=metadata=1:reset=0,ametadata=print:file=-','-f','null','-']);return Number(String(raw).match(/lavfi.astats.Overall.RMS_level=(-?[\d.]+)/)?.[1]);}
+  expect(await rms(1)).toBeGreaterThan((await rms(.3))+10);
+  expect(errors).toEqual([]);
+});
