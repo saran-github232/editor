@@ -3,7 +3,7 @@ import {FramePicker} from "../../../../../../src/frame-picker";
 import {FRAME_PRESETS} from "../../../../../../shared/frame-presets.mjs";
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useEditor } from "../../editor/use-editor";
 import { formatTimecode } from "opencut-wasm";
 import { invokeAction } from "../../actions";
@@ -149,7 +149,14 @@ function PlayPauseButton() {
 
 function CanvasFrameSelect(){
   const editor=useEditor();
+  const menu=useRef<HTMLDetailsElement>(null);
+  function sizePanel(){
+    const panel=menu.current?.querySelector<HTMLElement>(".canvas-frame-popover");
+    if(panel&&menu.current)panel.style.maxHeight=`${Math.max(100,menu.current.getBoundingClientRect().top-(menu.current.closest(".panel")?.getBoundingClientRect().top??100)-48)}px`;
+  }
+  useEffect(()=>{window.addEventListener("resize",sizePanel);return()=>window.removeEventListener("resize",sizePanel);},[]);
+  function close(){if(menu.current){menu.current.open=false;menu.current.querySelector("summary")?.focus();}}
   const size=useEditor(e=>e.project.getActive().settings.canvasSize);
   const selected=FRAME_PRESETS.find(p=>p.width===size.width&&p.height===size.height);
-  return <details className="canvas-frame-menu"><summary aria-label="Choose video frame ratio">{selected?.id||dimensionToAspectRatio(size)} ▾</summary><div className="canvas-frame-popover"><FramePicker value={selected?.id||'custom'} onChange={id=>{const p=FRAME_PRESETS.find(p=>p.id===id);if(p)editor.project.updateSettings({settings:{canvasSize:{width:p.width,height:p.height},canvasSizeMode:'preset'}});}}/><p>Changing the frame changes export dimensions. Reposition or scale timeline clips to adjust the composition.</p></div></details>;
+  return <details ref={menu} onToggle={sizePanel} className="canvas-frame-menu" onKeyDown={e=>{if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close();}}}><summary aria-label="Choose video frame ratio">{selected?.id||dimensionToAspectRatio(size)} ▾</summary><div className="canvas-frame-popover"><div className="frame-panel-header"><strong>Video frame</strong><button type="button" className="host-button" aria-label="Close frame ratio panel" onClick={close}>Close ×</button></div><FramePicker value={selected?.id||'custom'} onChange={id=>{const p=FRAME_PRESETS.find(p=>p.id===id);if(p)editor.project.updateSettings({settings:{canvasSize:{width:p.width,height:p.height},canvasSizeMode:'preset'}});}}/><p>Changing the frame changes export dimensions. Reposition or scale timeline clips to adjust the composition.</p></div></details>;
 }

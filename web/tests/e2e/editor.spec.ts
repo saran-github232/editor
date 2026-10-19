@@ -115,6 +115,10 @@ test('frame guide changes timeline canvas and persists across reload',async({pag
   await picker.getByLabel('Video frame ratio').selectOption('9:16');
   await expect(picker).toContainText('1080 × 1920');await expect(picker).toContainText('YouTube Shorts');
   await picker.getByText('Which ratio should I use?',{exact:true}).click();await expect(picker).toContainText('9:9 are identical');
+  await picker.getByRole('button',{name:'Close frame ratio panel'}).click();await expect(picker).not.toBeVisible();
+  await expect(page.getByLabel('Choose video frame ratio')).toBeFocused();
+  await page.getByLabel('Choose video frame ratio').click();await expect(picker.getByLabel('Video frame ratio')).toHaveValue('9:16');
+  await picker.getByRole('button',{name:'Close frame ratio panel'}).focus();await page.keyboard.press('Escape');await expect(picker).not.toBeVisible();
   await page.getByRole('button',{name:'Save project',exact:true}).click();
   await expect(page.locator('.editor-brand [role="status"]')).toHaveText('All changes saved');await page.reload();
   await expect(page.getByLabel('Choose video frame ratio')).toContainText('9:16');
