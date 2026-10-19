@@ -1,3 +1,6 @@
+import {dimensionToAspectRatio} from "../../utils/geometry";
+import {FramePicker} from "../../../../../../src/frame-picker";
+import {FRAME_PRESETS} from "../../../../../../shared/frame-presets.mjs";
 "use client";
 
 import { useState, useEffect } from "react";
@@ -34,6 +37,7 @@ export function PreviewToolbar({
       <TimecodeDisplay />
       <PlayPauseButton />
       <div className="justify-self-end flex items-center gap-2.5">
+        <CanvasFrameSelect />
         <ZoomSelect />
         <Separator orientation="vertical" className="h-4" />
         {/* v0.4.0 */}
@@ -141,4 +145,11 @@ function PlayPauseButton() {
       <HugeiconsIcon icon={isPlaying ? PauseIcon : PlayIcon} />
     </Button>
   );
+}
+
+function CanvasFrameSelect(){
+  const editor=useEditor();
+  const size=useEditor(e=>e.project.getActive().settings.canvasSize);
+  const selected=FRAME_PRESETS.find(p=>p.width===size.width&&p.height===size.height);
+  return <details className="canvas-frame-menu"><summary aria-label="Choose video frame ratio">{selected?.id||dimensionToAspectRatio(size)} ▾</summary><div className="canvas-frame-popover"><FramePicker value={selected?.id||'custom'} onChange={id=>{const p=FRAME_PRESETS.find(p=>p.id===id);if(p)editor.project.updateSettings({settings:{canvasSize:{width:p.width,height:p.height},canvasSizeMode:'preset'}});}}/><p>Changing the frame changes export dimensions. Reposition or scale timeline clips to adjust the composition.</p></div></details>;
 }

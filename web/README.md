@@ -59,6 +59,29 @@ Edits render through the same queue with Pause/Resume in the results list. Each 
 
 Merge joins now reset timestamps and trim audio padding before joining clips, instead of copying separately encoded AAC packets across boundaries. This adds a final encoding pass but avoids accumulated padding gaps. Rendering still takes time depending on clip length and hardware.
 
+## Video frame ratios and platform guide
+
+Use the **ratio menu beside the timeline preview controls**, or open **Settings → Aspect ratio**. Each choice shows width × height in pixels and a short use guide. Custom width and height remain available in timeline Settings. A ratio chosen before importing footage is retained.
+
+For a trimmed or merged result, open **Review → Edit this clip → Video frame ratio**. Choose **Fit entire video** to keep the whole image with black padding, or **Fill frame** to crop from the center. The preview shows that placement, and **Render final clip** produces the selected dimensions before you download. You can change only the frame, or add timed text and emojis as well. Frame settings are retained with the draft in the current browser tab. Crop mode can remove existing burned captions, so check the preview.
+
+| Ratio | Width × height | Starting use |
+| --- | --- | --- |
+| 16:9 | 1920 × 1080 | YouTube landscape, tutorials |
+| 9:16 | 1080 × 1920 | Instagram Reels, YouTube Shorts, Stories |
+| 1:1 (same as 9:9) | 1080 × 1080 | Square Instagram/Facebook feed layouts |
+| 4:5 | 1080 × 1350 | Portrait feed layouts |
+| 3:4 | 1080 × 1440 | Tall portrait compositions |
+| 4:3 | 1440 × 1080 | Classic footage and presentations |
+| 3:2 | 1620 × 1080 | Landscape photo-based videos |
+| 2:3 | 1080 × 1620 | Portrait photo-based videos |
+| 21:9 | 2520 × 1080 | Ultrawide compositions |
+| 1.91:1 | 1910 × 1000 | Wide social layouts |
+
+These are layout starting points, not a promise that every upload surface accepts every format. Ratio describes width relative to height, not duration. The timeline canvas controls export shape; check the export dialog for resolution scaling. Finished-clip presets export at the exact sizes above, which can upscale small sources without adding detail. Timeline clips can be moved/scaled individually; finished-clip Fill uses a center crop.
+
+Platform guidance was checked against [YouTube's aspect-ratio guide](https://support.google.com/youtube/answer/6375112), [YouTube's Shorts guide](https://support.google.com/youtube/answer/15424877), and [Meta's Reels guide](https://www.facebook.com/business/ads/facebook-instagram-reels-ads) on 19 October 2026. Check the destination's posting preview, especially for feed crops and video posts shown as Reels.
+
 ## Quality
 
 | Mode | Behavior |
@@ -137,7 +160,7 @@ See [VALIDATION.md](VALIDATION.md) for actual results and outstanding live-provi
 
 ### Latest checked results
 
-On 19 October 2026, the production build passed, all five browser workflows passed, and 18 unit/API/media checks passed (17 existing checks plus the new layer-validation test). Trim and merge editing were also rerun with exported-pixel comparisons to verify that text appears during its cue and disappears afterwards. Tests cover manual download, retained audio/dimensions, and browser-tab draft restoration. Live NVIDIA/Gemini recognition and Drive uploads still require account configuration and have not been verified with live credentials. See `VALIDATION.md` for details.
+On 19 October 2026, all 20 unit/API/media checks and all seven Edge browser workflows passed. Tests render every frame preset in Fit and Fill modes, check output dimensions and audio, verify timed text pixels, and confirm portrait downloads from both editors. The timeline ratio survives reload and first-clip import. Live NVIDIA/Gemini recognition and Drive uploads still require account configuration and have not been verified with live credentials. See `VALIDATION.md` for build results and details.
 
 ### Clone from GitHub
 

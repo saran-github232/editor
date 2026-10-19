@@ -21,8 +21,10 @@ test('import, play range, merge with captions, preview and manually download bun
   await page.getByLabel('Range 2 start',{exact:true}).fill('00:00:05');await page.getByLabel('Range 2 end',{exact:true}).fill('00:00:07');
   await page.getByLabel('Timed subtitles',{exact:true}).fill('1\n00:00:01,000 --> 00:00:02,000\nFirst clip\n\n2\n00:00:05,000 --> 00:00:06,000\nSecond clip');
   let downloads=0;page.on('download',()=>downloads++);
+  const queued=page.waitForResponse(r=>r.url().endsWith('/api/jobs')&&r.request().method()==='POST');
   await page.getByRole('button',{name:'Render merged preview'}).click();
-  const job=page.locator('.job').first();await expect(job.locator('.job-state')).toHaveText('completed',{timeout:60000});expect(downloads).toBe(0);
+  const created=await(await queued).json();
+  const job=page.locator(`.job[data-job-id="${created.id}"]`);await expect(job.locator('.job-state')).toHaveText('completed',{timeout:60000});expect(downloads).toBe(0);
   await job.getByRole('button',{name:'Review',exact:true}).click();
   const dialog=page.getByRole('dialog',{name:'Review rendered clip'});
   await expect(dialog).toBeVisible();await expect.poll(()=>dialog.locator('video').evaluate((v:HTMLVideoElement)=>v.readyState)).toBeGreaterThanOrEqual(2);
@@ -103,4 +105,40 @@ for(const merge of [false,true])test(`finished ${merge?'merge':'trim'} supports 
   const during=await difference(1),after=await difference(3);
   expect(during).toBeGreaterThan(after+5);
   expect(after).toBeLessThan(5);
+});
+
+test('frame guide changes timeline canvas and persists across reload',async({page})=>{
+  await page.goto('/');await page.getByLabel('Project name').fill('Frame guide');await page.getByRole('button',{name:'Create',exact:true}).click();
+  const welcome=page.getByRole('dialog',{name:'Welcome to the editor'});await welcome.getByRole('button',{name:'Close',exact:true}).click();
+  await page.getByLabel('Choose video frame ratio').click();
+  const picker=page.locator('.canvas-frame-popover');
+  await picker.getByLabel('Video frame ratio').selectOption('9:16');
+  await expect(picker).toContainText('1080 × 1920');await expect(picker).toContainText('YouTube Shorts');
+  await picker.getByText('Which ratio should I use?',{exact:true}).click();await expect(picker).toContainText('9:9 are identical');
+  await page.getByRole('button',{name:'Save project',exact:true}).click();
+  await expect(page.locator('.editor-brand [role="status"]')).toHaveText('All changes saved');await page.reload();
+  await expect(page.getByLabel('Choose video frame ratio')).toContainText('9:16');
+  const input=page.waitForEvent('filechooser');await page.getByRole('button',{name:'Import',exact:true}).click();await(await input).setFiles(fixture);
+  const asset=page.getByRole('listbox',{name:'Assets'}).getByRole('option').filter({hasText:'e2e-fixture.mp4'});await expect(asset).toBeVisible();await asset.getByRole('button').click();
+  await expect(page.getByLabel('Choose video frame ratio')).toContainText('9:16');
+  await page.getByRole('button',{name:'Export',exact:true}).click();
+  const download=page.waitForEvent('download');await page.getByRole('button',{name:'Export',exact:true}).last().click();
+  const target=path.resolve('test-results/timeline-portrait.mp4');await(await download).saveAs(target);
+  const meta=await probe(target);expect(meta.width).toBe(1080);expect(meta.height).toBe(1920);
+});
+
+test('finished clip frame choice previews and downloads a portrait video',async({page})=>{
+  await page.goto('/batch');const media=await(await page.request.get('/api/media')).json();const source=media.find((m:any)=>m.name==='e2e-fixture.mp4');
+  const job=await(await page.request.post('/api/jobs',{data:{mediaId:source.id,ranges:[{start:0,end:1}],resolution:'original',mode:'exact'}})).json();
+  await expect.poll(async()=>{const jobs=await(await page.request.get('/api/jobs')).json();return jobs.find((j:any)=>j.id===job.id)?.status;}).toBe('completed');
+  await page.reload();await page.locator('.job').first().getByRole('button',{name:'Review',exact:true}).click();
+  const dialog=page.getByRole('dialog',{name:'Review rendered clip'});await dialog.getByRole('button',{name:'Edit this clip',exact:true}).click();
+  await dialog.getByLabel('Video frame ratio').selectOption('9:16');await expect(dialog).toContainText('1080 × 1920');
+  await dialog.getByLabel('Picture placement').selectOption('cover');
+  await expect(dialog.locator('.overlay-stage')).toHaveCSS('aspect-ratio','1080 / 1920');
+  await dialog.getByRole('button',{name:'Add text or emoji'}).click();await dialog.getByLabel('Layer 1 text',{exact:true}).fill('Reel 🎉');
+  await page.screenshot({path:path.resolve('test-results/frame-portrait.png')});
+  await dialog.getByRole('button',{name:'Render final clip'}).click();await expect(dialog.getByRole('link',{name:'Download video',exact:true})).toBeVisible({timeout:60000});
+  const download=page.waitForEvent('download');await dialog.getByRole('link',{name:'Download video',exact:true}).click();const target=path.resolve('test-results/frame-portrait.mp4');await(await download).saveAs(target);
+  const meta=await probe(target);expect(meta.width).toBe(1080);expect(meta.height).toBe(1920);expect(meta.hasAudio).toBeTruthy();
 });

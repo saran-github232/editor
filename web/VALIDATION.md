@@ -1,5 +1,15 @@
 # Validation log
 
+## 19 October 2026: frame ratios and platform guide
+
+- Final production build passed (33.28 seconds). The existing large JavaScript bundle warning remains.
+- Unit/API/media suite: 20 passed in the sequential rerun (34.5 seconds).
+- Final Edge browser regression suite: all 7 passed (1.6 minutes), with tracing disabled for the rerun.
+- All ten presets were rendered with both Fit and Fill. Output dimensions and audio were checked, with pixel checks confirming padding versus cropped fill.
+- Browser checks confirm the guide, persistence after reload, retaining a selected ratio when importing the first timeline clip, and 1080 x 1920 downloads from both timeline and finished-clip editors.
+- The initial overlapping test run had a render timeout. A later browser regression exposed a test race that selected an older finished job; the test now waits for the exact newly created job ID.
+- New platform guidance links to official YouTube and Meta pages. Layout presets do not guarantee acceptance by every publishing surface.
+
 ## 19 October 2026: editing finished clips
 
 - Production build passed. The existing large-bundle warning remains.

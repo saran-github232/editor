@@ -1,3 +1,4 @@
+import {frameSettings} from '../shared/frame-presets.mjs';
 import express from 'express';
 import {validateLayers,prepareEdit,renderEdit} from './clip-edit.mjs';
 import {createServer as createHttpServer} from 'node:http';
@@ -112,10 +113,11 @@ app.post('/api/jobs/:id/edit',async(req,res)=>{
   const source=path.join(exportDir(parent),output.name);
   const meta=await probe(source);
   if(['smpte2084','arib-std-b67'].includes(meta.colorTransfer))return res.status(400).json({error:'Text editing currently supports SDR video only.'});
-  const layers=validateLayers(req.body.layers,meta.duration);
+  const frame=frameSettings(req.body.frame?.id,req.body.frame?.fit);
+  const layers=validateLayers(req.body.layers,meta.duration,frame.id!=='original');
   const job={id:randomUUID(),mediaId:parent.mediaId,name:'Edited '+output.name,createdAt:Date.now(),temporary:true,edited:true,status:'queued',mode:'exact',outputs:[],progress:0,subtitle:!!output.subtitle};
   const dir=exportDir(job);await mkdir(dir,{recursive:true});
-  try{await prepareEdit(dir,source,layers,output.subtitle?path.join(exportDir(parent),output.subtitle):undefined);await save('jobs',job);}
+  try{await prepareEdit(dir,source,layers,output.subtitle?path.join(exportDir(parent),output.subtitle):undefined,frame);await save('jobs',job);}
   catch(e){await rm(dir,{recursive:true,force:true});throw e;}
   res.status(201).json(job);void pump();
 });

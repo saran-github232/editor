@@ -93,7 +93,7 @@ export class InsertElementCommand extends Command {
           !activeProject?.settings.originalCanvasSize;
         editor.project.updateSettings({
           settings: {
-            canvasSize: nextCanvasSize,
+            ...(!activeProject.settings.canvasSizeMode ? { canvasSize: nextCanvasSize } : {}),
             ...(shouldSetOriginalCanvasSize
               ? { originalCanvasSize: nextCanvasSize }
               : {}),
