@@ -41,9 +41,23 @@ If FFmpeg is missing after installation, npm may have blocked its install script
 7. Choose **Review** on a finished result. Watch it, then explicitly choose **Download video**, **Video + captions (.zip)**, or **Save to Google Drive**. No browser download or Drive upload begins automatically.
 8. **Edit settings & render again** restores the ranges and captions for another render. **Discard** removes the render. It does not delete the source or previously downloaded files.
 
-In Review, use **Finished part** to switch between rendered clips, **Preview last 10 seconds** to check an ending, or **Edit this clip** to restore just that clip's source range. If an older preview file is missing, **Rebuild playable preview** creates a new precise-cut render from the original and opens it when ready. This requires the imported original to still be available and does not download anything automatically.
+In Review, use **Finished part** to switch between rendered clips, **Preview last 10 seconds** to check an ending, or **Edit this clip** to add text and emojis without leaving Review. **Change trim ranges** restores the source range separately. If an older preview file is missing, **Rebuild playable preview** creates a new precise-cut render from the original and opens it when ready. This requires the imported original to still be available and does not download anything automatically.
 
 MP4 downloads include burned-in captions when captions were supplied. The ZIP includes both the MP4 and editable SRT. Caption times are trimmed and rebased to each output, including the merged sequence. Auto split still supports 60, 90, 120, 150 and 180-second parts.
+
+## Edit a finished trim or merge
+
+1. Render your trim, auto-split part, or merged sequence and open **Review**.
+2. Choose **Edit this clip**, then **Add text or emoji**. Add titles such as “Part 1”, short captions, or paste emojis. Up to 20 layers can overlap.
+3. Set each layer's start/end in seconds on the **finished clip**, starting at zero. Adjust horizontal/vertical position, size, color, and the dark readability background. Use multiple layers for timed captions.
+4. Scrub or play the video to preview placement and timing. Draft text settings survive closing and reopening the editor in the same browser tab.
+5. Choose **Render final clip**. Wait for the finished video to open in Review, then download or save to Drive explicitly. Nothing downloads automatically.
+
+The new render keeps the finished clip's dimensions and audio, including existing burned captions. Text and color emojis are drawn by the browser and baked into H.264 video. Emoji appearance depends on installed system fonts. Overlay artwork is rasterized at up to 1920 pixels wide, then scaled to the video. Text added here is a visual layer, not an SRT cue; existing SRT sidecars are preserved. Keep text inside the preview frame to avoid clipping. Already burned captions cannot be removed here; change the original render settings to replace them.
+
+Edits render through the same queue with Pause/Resume in the results list. Each edit keeps its own temporary copy of the input so discarding its parent preview does not interrupt it. Temporary edits and inputs expire after 24 hours. Browser-tab drafts do not preserve expired media. Failed edits retain their draft for retry; final renders can receive additional layers, but previously baked layers are no longer individually editable in that final file.
+
+Merge joins now reset timestamps and trim audio padding before joining clips, instead of copying separately encoded AAC packets across boundaries. This adds a final encoding pass but avoids accumulated padding gaps. Rendering still takes time depending on clip length and hardware.
 
 ## Quality
 
@@ -123,7 +137,7 @@ See [VALIDATION.md](VALIDATION.md) for actual results and outstanding live-provi
 
 ### Latest checked results
 
-The production build and all three browser workflows passed: trim/merge/download, timeline save/reload/export, and missing-preview recovery with return to editing. The API/media suite previously passed 17 tests. The supplied footage was also merged and downloaded successfully at 1280 � 720. Live NVIDIA/Gemini recognition and Drive uploads still require account configuration and have not been verified with live credentials. See `VALIDATION.md` for details.
+On 19 October 2026, the production build passed, all five browser workflows passed, and 18 unit/API/media checks passed (17 existing checks plus the new layer-validation test). Trim and merge editing were also rerun with exported-pixel comparisons to verify that text appears during its cue and disappears afterwards. Tests cover manual download, retained audio/dimensions, and browser-tab draft restoration. Live NVIDIA/Gemini recognition and Drive uploads still require account configuration and have not been verified with live credentials. See `VALIDATION.md` for details.
 
 ### Clone from GitHub
 

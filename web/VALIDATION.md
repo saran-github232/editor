@@ -1,5 +1,18 @@
 # Validation log
 
+## 19 October 2026: editing finished clips
+
+- Production build passed. The existing large-bundle warning remains.
+- Existing unit/API/media suite: 17 passed. New layer-validation suite: 1 passed.
+- Full Edge browser suite: 5 passed (50.2 seconds), including timeline and missing-preview regressions.
+- Targeted trim/merge editing rerun: 2 passed (23.1 seconds). Exported-pixel comparisons confirm timed text appears during the cue and disappears afterwards.
+- Both edited outputs retain 320 x 180 dimensions, approximately four seconds of duration, and audio. Downloads start only after explicit action.
+- Color emoji and text placement were inspected in a captured editor screenshot. Browser-tab draft restoration was tested.
+- Merge now normalizes timestamps and trims audio padding at joins. Tests cover short synthetic footage; long-video performance and subjective playback on every source are not certified.
+- Tests required localhost access outside the restricted sandbox after its socket connections returned EACCES.
+
+## Earlier validation
+
 Date: 15 October 2026.
 
 ## Confirmed in this work

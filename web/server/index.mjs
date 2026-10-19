@@ -1,4 +1,5 @@
 import express from 'express';
+import {validateLayers,prepareEdit,renderEdit} from './clip-edit.mjs';
 import {createServer as createHttpServer} from 'node:http';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { mkdir, readFile, writeFile, rename, readdir, stat, rm, statfs } from 'node:fs/promises';
@@ -105,6 +106,19 @@ app.post('/api/jobs',async(req,res)=>{
   const job={id:randomUUID(),mediaId:m.id,name:m.name,createdAt:Date.now(),temporary:true,merge,custom:!!b.ranges,status:'queued',interval:Number(b.interval)||60,resolution:b.resolution,mode:b.mode,caption,label,srt,position:b.position==='top'?'top':'bottom',clips,outputs:[],progress:0};
   await save('jobs',job);res.status(201).json(job);void pump();
 });
+app.post('/api/jobs/:id/edit',async(req,res)=>{
+  const parent=await read('jobs',req.params.id),output=parent.outputs.find(o=>o.name===req.body.name);
+  if(parent.status!=='completed'||!output)return res.status(409).json({error:'Choose a completed preview.'});
+  const source=path.join(exportDir(parent),output.name);
+  const meta=await probe(source);
+  if(['smpte2084','arib-std-b67'].includes(meta.colorTransfer))return res.status(400).json({error:'Text editing currently supports SDR video only.'});
+  const layers=validateLayers(req.body.layers,meta.duration);
+  const job={id:randomUUID(),mediaId:parent.mediaId,name:'Edited '+output.name,createdAt:Date.now(),temporary:true,edited:true,status:'queued',mode:'exact',outputs:[],progress:0,subtitle:!!output.subtitle};
+  const dir=exportDir(job);await mkdir(dir,{recursive:true});
+  try{await prepareEdit(dir,source,layers,output.subtitle?path.join(exportDir(parent),output.subtitle):undefined);await save('jobs',job);}
+  catch(e){await rm(dir,{recursive:true,force:true});throw e;}
+  res.status(201).json(job);void pump();
+});
 app.post('/api/jobs/:id/pause',async(req,res)=>{const j=await read('jobs',req.params.id);if(active?.id===j.id)active.controller.abort();else if(j.status==='queued'){j.status='paused';await save('jobs',j);}res.json({ok:true});});
 app.post('/api/jobs/:id/resume',async(req,res)=>{const j=await read('jobs',req.params.id);if(!['paused','failed'].includes(j.status))return res.status(409).json({error:'Job cannot be resumed now.'});j.status='queued';j.message='';await save('jobs',j);res.json(j);void pump();});
 app.get('/api/jobs/:id/files/:name',async(req,res)=>{const j=await read('jobs',req.params.id),name=req.params.name;if(!j.outputs.some(o=>o.name===name||o.subtitle===name))return res.status(404).end();const target=path.join(exportDir(j),name);if(req.query.preview==='1'){res.type(name.endsWith('.mp4')?'mp4':'text/plain').sendFile(target,{dotfiles:'allow'});}else res.download(target,name,{dotfiles:'allow'});});
@@ -125,6 +139,11 @@ async function pump(){
   active={id:job.id,controller:new AbortController()};job.status='running';await save('jobs',job);
   const dir=exportDir(job);await mkdir(dir,{recursive:true});
   try{
+    if(job.edited){
+      const meta=await renderEdit(dir,active.controller.signal);
+      job.outputs=[{name:'Final.mp4',duration:meta.duration,width:meta.width,height:meta.height,subtitle:job.subtitle?'Final.srt':undefined}];
+      job.status='completed';job.progress=1;job.message='Edited clip ready for review.';return;
+    }
     const m=await read('media',job.mediaId),source=path.join(data,'media',m.id+m.ext),signal=active.controller.signal;
     const disk=await statfs(data);if(disk.bavail*disk.bsize<512*1024**2)throw new Error('At least 512 MB of free disk space is required.');
     if(job.mode==='copy'&&!job.custom){
@@ -147,7 +166,7 @@ async function pump(){
         if(burn)filter.push(`subtitles=overlay.srt:force_style='FontName=Arial,FontSize=22,Alignment=${job.position==='top'?8:2},MarginV=24,Outline=1'`);
         const partial=name+'.partial.mp4';
         try{
-          const encoding=job.mode==='copy'?['-c','copy','-avoid_negative_ts','make_zero']:['-vf',filter.join(','),'-c:v','libx264','-preset','medium','-crf','16','-pix_fmt','yuv420p','-c:a','aac','-b:a','320k'];
+          const encoding=job.mode==='copy'?['-c','copy','-avoid_negative_ts','make_zero']:['-vf',filter.join(','),'-c:v','libx264','-preset','veryfast','-crf','16','-pix_fmt','yuv420p','-c:a','aac','-b:a','320k'];
           await run(ffmpeg,['-hide_banner','-v','error','-y','-ss',String(clip.start),'-i',source,'-t',String(clip.duration),'-map','0:v:0','-map','0:a:0?',...encoding,'-movflags','+faststart',partial],{signal,cwd:dir});
           const meta=await probe(path.join(dir,partial));
           if(job.mode!=='copy'&&(meta.width!==size.width||meta.height!==size.height))throw new Error('Output dimensions did not match the requested size.');
@@ -160,10 +179,13 @@ async function pump(){
     if(job.merge){
       const parts=job.outputs.filter(o=>o.name.startsWith('Part-'));
       await writeFile(path.join(dir,'concat.txt'),parts.map(o=>`file '${o.name}'`).join('\n'));
-      await run(ffmpeg,['-v','error','-y','-f','concat','-safe','1','-i','concat.txt','-c','copy','-movflags','+faststart','Merged.partial.mp4'],{signal,cwd:dir});
+      const inputs=parts.flatMap(o=>['-i',o.name]);
+      const filters=parts.flatMap((o,i)=>[`[${i}:v]trim=duration=${job.clips[i].duration},setpts=PTS-STARTPTS[v${i}]`,...(m.hasAudio?[`[${i}:a]atrim=duration=${job.clips[i].duration},asetpts=PTS-STARTPTS,apad=whole_dur=${job.clips[i].duration}[a${i}]`]:[])]);
+      filters.push(parts.map((o,i)=>`[v${i}]${m.hasAudio?`[a${i}]`:''}`).join('')+`concat=n=${parts.length}:v=1:a=${m.hasAudio?1:0}[v]${m.hasAudio?'[a]':''}`);
+      await run(ffmpeg,['-v','error','-y',...inputs,'-filter_complex',filters.join(';'),'-map','[v]',...(m.hasAudio?['-map','[a]']:[]),'-c:v','libx264','-preset','veryfast','-crf','16','-pix_fmt','yuv420p','-c:a','aac','-b:a','320k','-movflags','+faststart','Merged.partial.mp4'],{signal,cwd:dir});
       await rename(path.join(dir,'Merged.partial.mp4'),path.join(dir,'Merged.mp4'));
       let offset=0;const mergedCues=[];
-      for(let i=0;i<job.clips.length;i++){const c=job.clips[i];for(const cue of parseSrt(clipSrt(parseSrt(job.srt),c.start,c.duration)))mergedCues.push({...cue,start:cue.start+offset,end:cue.end+offset});offset+=parts[i].duration;}
+      for(let i=0;i<job.clips.length;i++){const c=job.clips[i];for(const cue of parseSrt(clipSrt(parseSrt(job.srt),c.start,c.duration)))mergedCues.push({...cue,start:cue.start+offset,end:cue.end+offset});offset+=c.duration;}
       const subtitle=mergedCues.length?'Merged.srt':undefined;
       if(subtitle)await writeFile(path.join(dir,subtitle),clipSrt(mergedCues,0,offset));
       const meta=await probe(path.join(dir,'Merged.mp4'));

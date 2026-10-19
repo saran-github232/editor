@@ -65,7 +65,42 @@ test('missing rendered file can be rebuilt, previewed and reopened for editing',
   await expect(dialog.getByRole('alert')).toHaveCount(0);
   await dialog.getByRole('button',{name:'Preview last 10 seconds'}).click();
   await expect.poll(()=>dialog.locator('video').evaluate((v:HTMLVideoElement)=>v.currentTime)).toBeGreaterThan(0);
-  await dialog.getByRole('button',{name:'Edit this clip'}).click();
+  await dialog.getByRole('button',{name:'Change trim ranges'}).click();
   await expect(page.getByLabel('Range 1 start',{exact:true})).toHaveValue('00:00:01.000');
   await expect(page.getByLabel('Range 1 end',{exact:true})).toHaveValue('00:00:05.000');
+});
+
+for(const merge of [false,true])test(`finished ${merge?'merge':'trim'} supports timed text and emoji before final download`,async({page})=>{
+  await page.goto('/batch');
+  const media=await(await page.request.get('/api/media')).json();
+  const source=media.find((m:any)=>m.name==='e2e-fixture.mp4');
+  const response=await page.request.post('/api/jobs',{data:{mediaId:source.id,ranges:merge?[{start:0,end:2},{start:5,end:7}]:[{start:1,end:5}],merge,resolution:'original',mode:'exact'}});
+  const job=await response.json();
+  await expect.poll(async()=>{const jobs=await(await page.request.get('/api/jobs')).json();return jobs.find((j:any)=>j.id===job.id)?.status;},{timeout:60000}).toBe('completed');
+  await page.reload();await page.locator('.job').first().getByRole('button',{name:'Review',exact:true}).click();
+  const dialog=page.getByRole('dialog',{name:'Review rendered clip'});
+  await dialog.getByRole('button',{name:'Edit this clip',exact:true}).click();
+  await expect(dialog.getByRole('heading',{name:'Edit finished clip'})).toBeVisible();
+  await dialog.getByRole('button',{name:'Add text or emoji'}).click();
+  await dialog.getByLabel('Layer 1 text',{exact:true}).fill('Part 1 🎉');
+  await dialog.getByLabel('Start (seconds)',{exact:true}).fill('0.5');
+  await dialog.getByLabel('End (seconds)',{exact:true}).fill('2');
+  await dialog.getByRole('button',{name:'Back to review'}).click();
+  await dialog.getByRole('button',{name:'Edit this clip',exact:true}).click();
+  await expect(dialog.getByLabel('Layer 1 text',{exact:true})).toHaveValue('Part 1 🎉');
+  await dialog.locator('video').evaluate((v:HTMLVideoElement)=>{v.currentTime=1;});
+  await page.screenshot({path:path.resolve(`test-results/edit-${merge?'merge':'trim'}.png`)});
+  let downloads=0;page.on('download',()=>downloads++);
+  await dialog.getByRole('button',{name:'Render final clip'}).click();
+  await expect(dialog.getByRole('link',{name:'Download video',exact:true})).toBeVisible({timeout:60000});
+  expect(downloads).toBe(0);
+  const download=page.waitForEvent('download');await dialog.getByRole('link',{name:'Download video',exact:true}).click();
+  const target=path.resolve(`test-results/edited-${merge?'merge':'trim'}.mp4`);await(await download).saveAs(target);
+  const meta=await probe(target);expect(meta.width).toBe(320);expect(meta.height).toBe(180);expect(meta.hasAudio).toBeTruthy();expect(Math.abs(meta.duration-4)).toBeLessThan(.3);
+  // Compare against the unedited result: pixels should change only during the timed layer.
+  const original=path.resolve('test-results/e2e-previews',job.id,merge?'Merged.mp4':'Part-0001.mp4');
+  async function difference(time:number){const raw=await run(ffmpeg,['-v','error','-ss',String(time),'-i',target,'-ss',String(time),'-i',original,'-filter_complex','[0:v][1:v]blend=all_mode=difference,crop=200:28:60:12,signalstats,metadata=print:file=-','-frames:v','1','-f','null','-']);return Number(String(raw).match(/lavfi.signalstats.YAVG=([\d.]+)/)?.[1]);}
+  const during=await difference(1),after=await difference(3);
+  expect(during).toBeGreaterThan(after+5);
+  expect(after).toBeLessThan(5);
 });
