@@ -203,3 +203,37 @@ test('pro tools preserve motion, speed and titles through save and rendered expo
   expect(await rms(1)).toBeGreaterThan((await rms(.3))+10);
   expect(errors).toEqual([]);
 });
+
+test('settings save defaults, apply to projects and show GenZ Labs legal information',async({page})=>{
+  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('/settings');await expect(page.getByRole('heading',{name:'Settings',exact:true})).toBeVisible();
+  await page.getByLabel('New project frame').selectOption('9:16');await page.getByLabel('Starting frame rate').selectOption('25');
+  await page.getByLabel('Canvas background').fill('#123456');await page.getByLabel('Default clip length').selectOption('60');
+  await page.getByLabel('Default resolution').selectOption('720');await page.getByLabel('Default cut quality').selectOption('copy');
+  await expect(page.getByLabel('Default resolution')).toHaveValue('original');await expect(page.getByLabel('Default resolution')).toBeDisabled();
+  await page.getByLabel('Default offline language').selectOption('hi');await page.getByLabel('Preferred cloud provider').selectOption('gemini');
+  await page.getByLabel('Play finished previews automatically').uncheck();await page.getByRole('button',{name:'Save preferences',exact:true}).click();
+  await page.reload();await expect(page.getByLabel('New project frame')).toHaveValue('9:16');await expect(page.getByLabel('Starting frame rate')).toHaveValue('25');await expect(page.getByLabel('Play finished previews automatically')).not.toBeChecked();
+  await page.getByLabel('Default clip length').selectOption('120');await page.getByRole('button',{name:'Discard changes',exact:true}).click();await expect(page.getByLabel('Default clip length')).toHaveValue('60');
+  const legal=page.getByRole('region',{name:'Legal and privacy'});
+  for(const name of ['Terms and conditions','Privacy policy','MIT software license','Third-party licenses and notices'])await legal.getByText(name,{exact:true}).click();
+  await expect(legal).toContainText('Copyright (c) 2026 GenZ Labs');await expect(legal).toContainText('MPL-2.0');await expect(legal.getByRole('link',{name:'genzlabs2599@gmail.com'})).toHaveAttribute('href','mailto:genzlabs2599@gmail.com');
+  await page.screenshot({path:path.resolve('test-results/settings.png'),fullPage:true});
+  await page.getByRole('button',{name:'Projects',exact:true}).click();await page.getByLabel('Project name').fill('Saved defaults');await page.getByRole('button',{name:'Create',exact:true}).click();
+  await page.getByRole('dialog',{name:'Welcome to the editor'}).getByRole('button',{name:'Close',exact:true}).click();
+  await expect(page.getByLabel('Choose video frame ratio')).toContainText('9:16');
+  const id=page.url().split('/').pop();const project=await(await page.request.get('/api/projects/'+id)).json();expect(project.data.project.settings.fps.numerator).toBe(25);expect(project.data.project.settings.background.color).toBe('#123456');
+  await page.getByRole('link',{name:/Batch clips/}).click();await page.getByRole('button',{name:'Auto split',exact:true}).click();await expect(page.getByRole('combobox',{name:'Clip length',exact:true})).toHaveValue('60');await expect(page.getByRole('combobox',{name:'Quality',exact:true})).toHaveValue('copy');
+  await page.getByRole('button',{name:'Merge clips',exact:true}).click();await expect(page.getByRole('combobox',{name:'Quality',exact:true})).toHaveValue('exact');
+  await page.getByRole('button',{name:'Settings',exact:true}).click();await page.getByRole('button',{name:'Reset defaults',exact:true}).click();await page.getByRole('button',{name:'Save preferences',exact:true}).click();await page.reload();await expect(page.getByLabel('New project frame')).toHaveValue('auto');expect(errors).toEqual([]);
+});
+
+test('cloud settings save and clear session keys without exposing them',async({page})=>{
+  await page.goto('/settings');await expect(page.getByRole('button',{name:'Save cloud settings'})).toBeEnabled();
+  await page.getByLabel('Gemini API key',{exact:true}).fill('test-not-a-live-key');await page.getByRole('button',{name:'Save cloud settings'}).click();
+  await expect(page.getByLabel('Gemini API key',{exact:true})).toHaveValue('');
+  let state=await(await page.request.get('/api/cloud-speech')).json();expect(state.configured.gemini).toBe(true);expect(JSON.stringify(state)).not.toContain('test-not-a-live-key');
+  expect(await page.evaluate(()=>JSON.stringify(localStorage))).not.toContain('test-not-a-live-key');
+  await page.getByRole('button',{name:'Clear session keys'}).click();await expect.poll(async()=> (await(await page.request.get('/api/cloud-speech')).json()).configured.gemini).toBe(false);
+  await page.evaluate(()=>localStorage.setItem('clipper.preferences.v1','{"fps":-10,"frame":"invalid","autoplay":"wrong"}'));await page.reload();await expect(page.getByLabel('Starting frame rate')).toHaveValue('30');await expect(page.getByLabel('New project frame')).toHaveValue('auto');
+});

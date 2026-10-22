@@ -150,6 +150,16 @@ Open **Pro tools** beside Save project in the timeline editor. Select a clip usi
 
 These tools complement the existing timeline, keyframes, masks and blend modes. This is a focused local editor, not full Premiere Pro or After Effects feature parity. Heavy effects, long 4K sequences and all codec combinations still need separate validation.
 
+## Settings and legal information
+
+Open **Settings** in the sidebar (or `/settings`). Change the new-project frame, starting frame rate and background; batch clip length, cut quality and resolution; caption language/provider; and finished-preview autoplay. Choose **Save preferences** to apply, **Discard changes** to undo unsaved edits, or **Reset defaults** followed by Save to restore defaults. Preferences are stored in this browser, apply to new projects/newly opened workspaces, and do not rewrite existing projects. Copy mode locks resolution to original; merging switches to precise cuts.
+
+Cloud settings let you set session API keys and the Gemini model, clear session keys, and connect/disconnect Google Drive. Keys are held in server memory, never browser preferences. Clearing keys does not edit `.env`; environment keys return after restart. Active transcription blocks credential changes. Drive uploads still require an explicit action in Review. Live provider access is not established by the local settings tests.
+
+Storage paths and the browser download location are labeled as runtime/browser configuration rather than editable fields. Changing `CLIPPER_DATA_DIR` or `CLIPPER_PREVIEW_DIR` requires a restart and does not migrate files.
+
+The legal section contains Terms and Conditions, a Privacy Policy, the MIT license for original Clipper web code, and third-party notices. Owner: **GenZ Labs**. Support/privacy: **genzlabs2599@gmail.com**. See [LICENSE](LICENSE) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Third-party components retain their licenses; this does not relicense MediaBunny, FFmpeg, vendored code or downloaded models. The documents describe this local build; review them and dependency redistribution requirements before a public commercial release. [GitHub's licensing guide](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository) explains repository license scope.
+
 ## Storage
 
 - Imported source files and saved project metadata live in `web/.clipper-data` by default. Set `CLIPPER_DATA_DIR` before startup to use another drive.
@@ -172,7 +182,7 @@ See [VALIDATION.md](VALIDATION.md) for actual results and outstanding live-provi
 
 ### Latest checked results
 
-On 19 October 2026, all 22 unit/API/media checks and all eight Edge browser workflows passed (seven regressions plus the new Pro tools export test). Tests render every frame preset in Fit and Fill modes, check output dimensions and audio, verify timed text pixels, and confirm portrait downloads from both editors. The timeline ratio survives reload and first-clip import. The Pro tools workflow also verifies save/reopen, undo/redo, retiming, editable motion channels, titles and rendered video/audio fades. Live NVIDIA/Gemini recognition and Drive uploads still require account configuration and have not been verified with live credentials. See `VALIDATION.md` for build results and details.
+On 22 October 2026, all 22 unit/API/media checks and all ten Edge browser workflows passed, including editable settings, persistence, legal information and session-key handling. Tests render every frame preset in Fit and Fill modes, check output dimensions and audio, verify timed text pixels, and confirm portrait downloads from both editors. The timeline ratio survives reload and first-clip import. The Pro tools workflow also verifies save/reopen, undo/redo, retiming, editable motion channels, titles and rendered video/audio fades. Live NVIDIA/Gemini recognition and Drive uploads still require account configuration and have not been verified with live credentials. See `VALIDATION.md` for build results and details.
 
 ### Clone from GitHub
 

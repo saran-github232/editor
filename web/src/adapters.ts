@@ -1,3 +1,5 @@
+import {readPreferences} from './preferences';
+import {FRAME_PRESETS} from '../shared/frame-presets.mjs';
 import { createDefaultAdapters } from '../vendor/artcraft-video-editor/src/lib/adapters/default';
 import { EditorCore } from '../vendor/artcraft-video-editor/src/lib/core';
 import { buildDefaultScene } from '../vendor/artcraft-video-editor/src/lib/timeline/scenes';
@@ -35,8 +37,9 @@ export const adapters={...createDefaultAdapters(),
 EditorCore.initialize({adapters});
 export const editor=EditorCore.getInstance();
 export async function createProject(name:string){
+  const prefs=readPreferences(),frame=FRAME_PRESETS.find(p=>p.id===prefs.frame);
   const scene=buildDefaultScene({name:'Main sequence',isMain:true});
-  const project={metadata:{id:crypto.randomUUID(),name:name.trim()||'Untitled sequence',duration:ZERO_MEDIA_TIME,createdAt:new Date(),updatedAt:new Date()},scenes:[scene],currentSceneId:scene.id,settings:{fps:{numerator:30,denominator:1},canvasSize:{width:1920,height:1080},background:{type:'color' as const,color:'#000000'}},version:1};
+  const project={metadata:{id:crypto.randomUUID(),name:name.trim()||'Untitled sequence',duration:ZERO_MEDIA_TIME,createdAt:new Date(),updatedAt:new Date()},scenes:[scene],currentSceneId:scene.id,settings:{fps:{numerator:prefs.fps,denominator:1},canvasSize:{width:frame?.width||1920,height:frame?.height||1080},...(frame?{canvasSizeMode:'preset' as const}:{}),background:{type:'color' as const,color:prefs.background}},version:1};
   const envelope={id:project.metadata.id,name:project.metadata.name,updatedAt:Date.now(),data:serializeProjectDocument({project,media:[]})};
   await adapters.projectStorage.saveProject(envelope);return envelope;
 }

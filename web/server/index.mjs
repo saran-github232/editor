@@ -42,7 +42,7 @@ app.use((req,res,next)=>{
   if(req.path.startsWith('/api/')&&!req.headers.cookie?.split(';').some(c=>c.trim()===`clipper_session=${token}`))return res.status(401).json({error:'Open Clipper in this browser first.'});
   next();
 });
-app.get('/api/status',async(req,res)=>{const disk=await statfs(data);res.json({version:'0.1.0',storage:data,freeBytes:disk.bavail*disk.bsize,activeJob:active?.id||null});});
+app.get('/api/status',async(req,res)=>{const disk=await statfs(data);res.json({version:'0.1.0',storage:data,previews,freeBytes:disk.bavail*disk.bsize,activeJob:active?.id||null});});
 app.post('/api/media',async(req,res)=>{
   const name=decodeURIComponent(String(req.headers['x-file-name']||'media')).slice(0,240);
   const ext=path.extname(name).toLowerCase();

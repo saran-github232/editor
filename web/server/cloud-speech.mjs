@@ -36,7 +36,7 @@ export function cloudSpeechRoutes(app,{root,data,previews,read}){
   let config={geminiKey:process.env.GEMINI_API_KEY||'',geminiModel:process.env.GEMINI_MODEL||'gemini-2.5-flash',nvidiaKey:process.env.NVIDIA_API_KEY||'',nvidiaFunctionId:process.env.NVIDIA_FUNCTION_ID||'71203149-d3b7-4460-8231-1be2543a1fca'};
   let state={status:'idle'},controller;
   app.get('/api/cloud-speech',(req,res)=>res.json({...state,configured:{gemini:!!config.geminiKey,nvidia:!!config.nvidiaKey},geminiModel:config.geminiModel}));
-  app.post('/api/cloud-speech/settings',(req,res)=>{for(const key of ['geminiKey','nvidiaKey','geminiModel'])if(typeof req.body[key]==='string'&&req.body[key].trim())config[key]=req.body[key].trim().slice(0,500);res.json({ok:true});});
+  app.post('/api/cloud-speech/settings',(req,res)=>{if(state.status==='transcribing')return res.status(409).json({error:'Wait for the active caption task or cancel it before changing credentials.'});if(req.body.clearKeys===true){config.geminiKey='';config.nvidiaKey='';return res.json({ok:true});}for(const key of ['geminiKey','nvidiaKey','geminiModel'])if(typeof req.body[key]==='string'&&req.body[key].trim())config[key]=req.body[key].trim().slice(0,500);res.json({ok:true});});
   app.post('/api/cloud-speech/cancel',(req,res)=>{controller?.abort();res.json({ok:true});});
   app.post('/api/cloud-speech/transcribe',async(req,res)=>{
     if(state.status==='transcribing')return res.status(409).json({error:'A cloud transcript is already running.'});

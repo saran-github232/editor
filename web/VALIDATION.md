@@ -1,5 +1,15 @@
 # Validation log
 
+## 22 October 2026: editable settings and legal information
+
+- Replaced the information-only settings page with browser-persisted editing, batch, captions and playback defaults. Added Save, Discard and Reset controls and a direct /settings route. Existing projects retain their settings.
+- Added session cloud-key/model controls, key clearing, Drive connection/disconnection and runtime storage information. Credential changes are blocked during active transcription.
+- Added GenZ Labs terms, privacy information, the MIT license for original web code, and preserved third-party notices. Owner and email were supplied by the user. These are not a complete redistribution compliance audit.
+- Targeted settings browser checks: 2 passed (57.8 seconds), including saved defaults applied to a new project, batch copy/merge rules, reset/discard, legal content, corrupted-preference fallback, and API keys absent from API responses/browser preferences. Tests use a dummy key and do not contact cloud providers.
+- Unit/API/media suite: 22 passed (13.72 seconds). Final production build passed (23.56 seconds); the existing large-bundle warning remains.
+- Full browser regression suite: 10 passed (2.4 minutes), including actual trim, merge, portrait and motion/audio exports.
+- Live Google OAuth and provider recognition still require configured credentials and separate checks.
+
 ## 19 October 2026: timeline Pro tools
 
 - Added a focused panel using the existing command history, keyframes and render pipeline: motion/audio fades, zoom, slide-up, framing, playback speed, gain/mute and editable title templates.

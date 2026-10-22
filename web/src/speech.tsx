@@ -1,8 +1,9 @@
+import {readPreferences} from './preferences';
 import React,{useEffect,useState} from 'react';
 import {Mic,Download,Square,Check} from 'lucide-react';
 import {api,json,notify} from './adapters';
 export function SpeechControls({mediaId,onTranscript}:{mediaId:string,onTranscript:(srt:string)=>void}){
- const [state,setState]=useState<any>(null),[language,setLanguage]=useState('en'),[sending,setSending]=useState(false);
+ const [state,setState]=useState<any>(null),[language,setLanguage]=useState(()=>readPreferences().language),[sending,setSending]=useState(false);
  useEffect(()=>{let alive=true;const refresh=()=>api('/speech').then(s=>{if(alive)setState(s);}).catch(()=>{});void refresh();const timer=setInterval(refresh,2000);return()=>{alive=false;clearInterval(timer);};},[]);
  const busy=sending||['installing','transcribing'].includes(state?.status);
  async function action(name:string){setSending(true);try{await api('/speech/'+name,json('POST',{language,mediaId}));setState(await api('/speech'));}catch(e){notify((e as Error).message);}finally{setSending(false);}}

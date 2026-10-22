@@ -1,8 +1,9 @@
+import {readPreferences} from './preferences';
 import React,{useEffect,useState} from 'react';
 import {api,json,notify} from './adapters';
 
 export function CloudCaptions({mediaId,onTranscript}:{mediaId:string,onTranscript:(value:string)=>void}){
-  const [state,setState]=useState<any>({}),[keys,setKeys]=useState({geminiKey:'',nvidiaKey:''}),[provider,setProvider]=useState('nvidia'),[sending,setSending]=useState(false);
+  const [state,setState]=useState<any>({}),[keys,setKeys]=useState({geminiKey:'',nvidiaKey:''}),[provider,setProvider]=useState(()=>readPreferences().provider),[sending,setSending]=useState(false);
   useEffect(()=>{let alive=true;const refresh=()=>api('/cloud-speech').then(s=>{if(alive)setState(s);}).catch(e=>notify(e.message));void refresh();const t=setInterval(refresh,2500);return()=>{alive=false;clearInterval(t);};},[]);
   useEffect(()=>{if(state.status==='completed'&&state.mediaId===mediaId)onTranscript(state.srt);},[state.status,state.mediaId,mediaId]);
   async function action(verb:string){setSending(true);try{if(verb==='transcribe'){await api('/cloud-speech/settings',json('POST',keys));setKeys({geminiKey:'',nvidiaKey:''});}setState({...state,...await api('/cloud-speech/'+verb,json('POST',{mediaId,provider}))});}catch(e){notify((e as Error).message);}finally{setSending(false);}}
